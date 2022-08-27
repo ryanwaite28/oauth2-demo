@@ -1,107 +1,27 @@
-const dotenv = require(`dotenv`);
-dotenv.config();
-
-const path = require('path');
-const express = require(`express`);
-const cors = require(`cors`);
-const jsonwebtoken = require(`jsonwebtoken`);
-const nunjucks = require('nunjucks');
+const { generateJWT, decodeJWT, minutes, uniqueValue } = require(`./utils`);
+const { v4: uuidv4 } = require('uuid');
 const moment = require('moment');
-const session = require('express-session');
-const connect_pg_simple = require('connect-pg-simple');
-const body_parser = require('body-parser');
-const db_session_store = connect_pg_simple(session);
+const UsersMicroservice = require('./users-microservice');
 
 
-
-const minutes = 1000 * 60;
-const minutes_5 = 1000 * 60 * 5;
-const uniqueValue = () => {
-  return String(Date.now()) +
-    Math.random().toString(36).substr(2, 34) +
-    Math.random().toString(36).substr(2, 34) +
-    Math.random().toString(36).substr(2, 34)
-};
-
-function generateJWT(data) {
-  // console.log(`generateJWT:`, { data });
-  try {
-    const jwt_token = jsonwebtoken.sign(data, (process.env.JWT_SECRET));
-    return jwt_token || null;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
-
-function decodeJWT(token) {
-  try {
-    const data = jsonwebtoken.verify(token, (process.env.JWT_SECRET));
-    // console.log(`decodeJWT:`, { data });
-    return data;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
-
-
-const users = [
-  { uid: 1, name: { first: `Test`, middle: `QA`, last: `User` }, email: `email`, password: `password`, date_joined: new Date().toISOString() },
-  { uid: 2, name: { first: `John`, middle: ` Lee`, last: `Doe` }, email: `email2`, password: `password2`, date_joined: new Date().toISOString() },
-];
 
 const apps = [
   {
-    cliend_id: 12345,
+    client_id: 12345,
     name: `Demo App`,
     success_redirect: `http://localhost:5600/oauth-login`,
     error_redirect: `http://localhost:5600/oauth-login-error`,
     domain: `http://localhost:5600`,
   }
 ];
-
 const authCodes = {};
-
-
 const HOST = `http://localhost:8080`;
 
-const app =  express();
-app.use(body_parser.json());
-app.use(body_parser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(cors());
-
-nunjucks.configure({ autoescape: true });
-nunjucks.configure(path.join(__dirname, 'public'), {
-  autoescape: true,
-  express: app,
-});
-
-const isProd = app.get('env') === 'production';
-const express_session = session({
-  // store: new db_session_store({
-  //   conString: process.env.DATABASE_URL,
-  // }),
-
-  // Insert express-session options here
-  saveUninitialized: false,
-  secret: process.env.COOKIE_SECRET,
-  resave: false,
-  cookie: {
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    sameSite: isProd ? 'none' : false,
-    path: '/',
-    secure: isProd
-  },
-});
-app.use(express_session);
 
 
 
 
-app.get(`/oauth`, (request, response) => {
+const get_oauth = (request, response) => {
   const logged_in = !!request.session.uid;
   const params = request.url.split('?')[1];
 
@@ -122,7 +42,7 @@ app.get(`/oauth`, (request, response) => {
     });
   }
 
-  const app = apps.find(a => a.cliend_id === parseInt(request.query.client_id));
+  const app = apps.find(a => a.client_id === parseInt(request.query.client_id));
   if (!app) {
     return response.status(400).json({
       error: `no app found by client_id "${request.query.client_id}"`
@@ -139,8 +59,9 @@ app.get(`/oauth`, (request, response) => {
 
   return response.render(`static/html/oauth.html`, { third_party_app_name: app.name, client_id: request.query.client_id });
   // return response.status(200).json({ message: `admit one` });
-});
-app.post(`/oauth`, (request, response) => {
+};
+
+const post_oauth = (request, response) => {
   const logged_in = !!request.session.uid;
   const params = request.url.split('?')[1];
 
@@ -159,7 +80,7 @@ app.post(`/oauth`, (request, response) => {
     });
   }
 
-  const app = apps.find(a => a.cliend_id === parseInt(request.query.client_id));
+  const app = apps.find(a => a.client_id === parseInt(request.query.client_id));
   if (!app) {
     return response.status(400).json({
       error: `no app found by client_id ${request.query.client_id}`
@@ -168,18 +89,35 @@ app.post(`/oauth`, (request, response) => {
 
   const code = uniqueValue(); // auth grant code
   authCodes[code] = {
-    client_id: request.query.client_id,
-    user: users.find(u => u.uid === request.session.uid),
+    client_id: parseInt(request.query.client_id),
+    user: request.session.user,
   };
   setTimeout(() => {
     delete authCodes[code];
   }, minutes * 5);
 
-  const redirect_url = app.success_redirect + `?code=${code}`
-  return response.redirect(redirect_url);
-});
+  const redirect_url = app.success_redirect + `?code=${code}`;
 
-app.get(`/oauth/grant`, (request, response) => {
+  const xsrf_token = uuidv4();
+  console.log({ xsrf_token });
+  response.cookie('XSRF-TOKEN', xsrf_token, { httpOnly: false });
+  response.setHeader(`Access-Control-Allow-Origin`, app.domain);
+
+  return response.redirect(redirect_url);
+};
+
+const get_oauth_grant = (request, response) => {
+
+  console.log({ cookies: request.cookies, headers: request.headers });
+
+  const xsrf_token_cookie = request.cookies['XSRF-TOKEN'];
+  const xsrf_token_header = request.get(`X-XSRF-TOKEN`);
+
+  const xsrf_safe = !!xsrf_token_cookie && !!xsrf_token_header && xsrf_token_cookie === xsrf_token_header;
+
+  console.log({ xsrf_token_cookie, xsrf_token_header, xsrf_safe });
+
+  console.log({ url: request.url, origin: request.get('origin'), referer: request.get('referer'), session: request.session });
   
   if (!request.query.client_id) {
     return response.status(400).json({
@@ -192,7 +130,7 @@ app.get(`/oauth/grant`, (request, response) => {
     });
   }
 
-  const app = apps.find(a => a.cliend_id === parseInt(request.query.client_id));
+  const app = apps.find(a => a.client_id === parseInt(request.query.client_id));
   if (!app) {
     return response.status(400).json({
       error: `no app found by client_id ${request.query.client_id}`
@@ -211,6 +149,18 @@ app.get(`/oauth/grant`, (request, response) => {
       error: `invalid auth grant code`
     });
   }
+
+  console.log({
+    auth,
+    query: request.query
+  });
+
+  if (auth.client_id !== parseInt(request.query.client_id)) {
+    return response.status(400).json({
+      error: `auth grant code mismatch by client_id ${request.query.client_id}`
+    });
+  }
+
   delete authCodes[request.query.code];
 
   const expire_moment = moment().add(5, 'days');
@@ -225,10 +175,12 @@ app.get(`/oauth/grant`, (request, response) => {
   const access_token = generateJWT(data);
   console.log({ access_token });
 
-  return response.status(200).json({ access_token }); 
-});
+  response.setHeader(`Access-Control-Allow-Origin`, app.domain);
 
-app.get(`/verify-access-token`, (request, response) => {
+  return response.status(200).json({ access_token }); 
+};
+
+const verify_access_token = (request, response) => {
 
   const auth = request.get('Authorization');
   if (!auth) {
@@ -259,17 +211,11 @@ app.get(`/verify-access-token`, (request, response) => {
     return response.status(401).json({ message: `token is expired`, expired: true });
   }
 
-  return response.status(200).json({ message: `Token is valid!` });
+  return response.status(200).json({ valid: true, message: `Token is valid!` });
 
-});
+};
 
-app.get(`/check_session`, (request, response) => {
-  return response.status(200).json({ logged_in: !!request.session.uid });
-});
-
-
-
-app.get(`/login`, (request, response) => {
+const get_login = (request, response) => {
   const logged_in = !!request.session.uid;
   const params = request.url.split('?')[1];
 
@@ -284,9 +230,10 @@ app.get(`/login`, (request, response) => {
 
   console.log({ params, url: request.url, origin: request.get('origin'), referer: request.get('referer'), session: request.session });
 
-  return response.sendFile(path.join(__dirname, `/public/static/html/login.html`));
-});
-app.post(`/login`, (request, response) => {
+  return response.render(`static/html/login.html`, { client_id: request.query.client_id });
+};
+
+const post_login = async (request, response) => {
   const logged_in = !!request.session.uid;
   const params = request.url.split('?')[1];
 
@@ -306,17 +253,19 @@ app.post(`/login`, (request, response) => {
     return response.status(400).json({ message: `password required` });
   }
 
-  const user = users.find(u => u.email === email && u.password === password);
+  /* Call users microservice */
+  const user = await UsersMicroservice.login(email, password);
   if (!user) {
     return response.status(401).json({ message: `invalid credentials` });
   }
-
+  
+  request.session.user = user;
   request.session.uid = user.uid;
 
   return response.status(200).json({ user, message: `admit one` });
-});
+};
 
-app.get(`/signup`, (request, response) => {
+const get_signup = (request, response) => {
   const logged_in = !!request.session.uid;
   const params = request.url.split('?')[1];
 
@@ -331,9 +280,10 @@ app.get(`/signup`, (request, response) => {
 
   console.log({ params, url: request.url, origin: request.get('origin'), referer: request.get('referer'), session: request.session });
 
-  return response.sendFile(path.join(__dirname, `/public/static/html/signup.html`));
-});
-app.post(`/signup`, (request, response) => {
+  return response.render(`static/html/signup.html`, { client_id: request.query.client_id });
+};
+
+const post_signup = async (request, response) => {
   const logged_in = !!request.session.uid;
   const params = request.url.split('?')[1];
 
@@ -344,15 +294,41 @@ app.post(`/signup`, (request, response) => {
 
   console.log({ params, url: request.url, session: request.session });
 
+  const { email, password } = request.body || {};
 
-});
+  if (!email) {
+    return response.status(400).json({ message: `email required` });
+  }
+  if (!password) {
+    return response.status(400).json({ message: `password required` });
+  }
+
+  /* Call users microservice */
+  const results = await UsersMicroservice.signup(email, password);
+  if (!results) {
+    return response.status(401).json({ message: `invalid inputs` });
+  }
+  if (results.error) {
+    return response.status(results.status).json({ message: results.message });
+  }
+
+  request.session.user = results;
+  request.session.uid = results.uid;
+
+  return response.status(200).json({ user: results, message: `admit one` });
+};
 
 
 
 
 
-const PORT = 8080;
-app.listen(PORT, (l, e) => {
-  console.log({ l, e });
-  console.log(`listening to port ${PORT}...`);
-});
+module.exports = {
+  get_oauth,
+  post_oauth,
+  get_oauth_grant,
+  verify_access_token,
+  get_login,
+  post_login,
+  get_signup,
+  post_signup,
+};

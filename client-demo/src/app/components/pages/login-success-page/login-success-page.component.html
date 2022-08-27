@@ -1,7 +1,11 @@
 <div class="">
   <p>login-success-page works!</p>
 
+  <p *ngIf="errorMessage">{{ errorMessage }}</p>
+
   <div *ngIf="userData">
-    Hi {{ userData.name.first }} {{ userData.name.middle }} {{ userData.name.last }}!
+    Hi <strong>{{ userData.name.first }} {{ userData.name.middle }} {{ userData.name.last }}</strong>!
+
+    <button type="button" class="btn btn-warning" (click)="logout()">Logout</button>
   </div>
 </div>

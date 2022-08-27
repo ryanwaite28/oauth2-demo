@@ -29,7 +29,13 @@ signupApp.controller('signupCtrl', ['$scope', '$http', ($scope, $http) => {
         'Accept': `application/json`,
       }
     })
-    .then(r => r.json())
+    .then(r => {
+      console.log(r);
+      if (!r.ok) {
+        throw r;
+      }
+      return r.json();
+    })
     .then((response) => {
       const params = window.location.href.split('?')[1];
       const oauth_location = `${HOST}/oauth?${params}`;
@@ -37,6 +43,11 @@ signupApp.controller('signupCtrl', ['$scope', '$http', ($scope, $http) => {
     })
     .catch((error) => {
       console.log(error);
+      error.json().then(data => {
+        console.log({ data });
+        $scope.errorMessage = data.message;
+        $scope.$apply();
+      });
     });
 
   };

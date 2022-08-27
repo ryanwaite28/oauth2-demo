@@ -1,3 +1,17 @@
 <div>
-  <button type="button" class="btn btn-primary" (click)="login_with_demoApp()">Login with DemoApp</button>
+  <!-- <button type="button" class="btn btn-primary" (click)="login_with_demoApp()">Login with DemoApp</button> -->
+
+  <a *ngIf="!logged_in" [href]="oauth_location">
+    <button type="button" class="btn btn-primary">Login with DemoApp</button>
+  </a>
+
+  <div *ngIf="logged_in">
+    Logged In
+
+    <div *ngIf="userData">
+      Hi <strong>{{ userData.name.first }} {{ userData.name.middle }} {{ userData.name.last }}</strong>!
+    </div>
+
+    <button type="button" class="btn btn-warning" (click)="logout()">Logout</button>
+  </div>
 </div>

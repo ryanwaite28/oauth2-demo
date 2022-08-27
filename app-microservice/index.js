@@ -8,25 +8,6 @@ const jsonwebtoken = require(`jsonwebtoken`);
 const body_parser = require('body-parser');
 
 
-const minutes = 1000 * 60;
-const minutes_5 = 1000 * 60 * 5;
-const uniqueValue = () => {
-  return String(Date.now()) +
-    Math.random().toString(36).substr(2, 34) +
-    Math.random().toString(36).substr(2, 34) +
-    Math.random().toString(36).substr(2, 34)
-};
-
-function generateJWT(data) {
-  // console.log(`generateJWT:`, { data });
-  try {
-    const jwt_token = jsonwebtoken.sign(data, (process.env.JWT_SECRET));
-    return jwt_token || null;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
 
 function decodeJWT(token) {
   try {
@@ -40,6 +21,33 @@ function decodeJWT(token) {
 }
 
 
+const whitelist_domains = process.env[`CORS_WHITELIST_ORIGINS`] ? process.env[`CORS_WHITELIST_ORIGINS`].split(',') : [];
+console.log({ whitelist_domains });
+
+const corsOptions = {
+  // https://expressjs.com/en/resources/middleware/cors.html
+  credentials: true,
+  optionsSuccessStatus: 200,
+  origin(origin, callback) {
+    const useOrigin = (origin || '');
+    const originIsAllowed = !origin || whitelist_domains.includes(useOrigin);
+    // console.log({
+    //   origin,
+    //   callback,
+    //   originIsAllowed,
+    //   whitelist_domains,
+    // });
+
+    if (originIsAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origin "${origin}" Not allowed by CORS`));
+    }
+  }
+};
+const corsMiddleware = cors(corsOptions);
+
+
 
 const AUTH_HOST = `http://localhost:8080`;
 const HOST = `http://localhost:8082`;
@@ -48,11 +56,23 @@ const app =  express();
 app.use(body_parser.json());
 app.use(body_parser.urlencoded({ extended: false }));
 
-app.use(cors());
+app.options('*', corsMiddleware);
+app.use(corsMiddleware);
+
+// app.use(cors());
 
 const isProd = app.get('env') === 'production';
 
-app.get(`/get-user-info`, (request, response) => {
+const dataByUserEmail = {
+  'email': [
+    { owner_uid: 1, title: `lorem ipsum`, body: `salor velim orisp vuju` }
+  ],
+  'email2': [
+    { owner_uid: 1, title: `lorem2 ipsum2`, body: `salor velim orisp vuju 2` }
+  ],
+};
+
+app.get(`/get-user-posts`, (request, response) => {
 
   const auth = request.get('Authorization');
   if (!auth) {
@@ -83,7 +103,7 @@ app.get(`/get-user-info`, (request, response) => {
     return response.status(401).json({ message: `token is expired`, expired: true });
   }
 
-  return response.status(200).json({ message: `User info`, data });
+  return response.status(200).json({ message: `Demo app service: users`, data: dataByUserEmail[you.email] });
 
 });
 

@@ -13,6 +13,7 @@
     "axios": "^0.27.2",
     "body-parser": "^1.20.0",
     "connect-pg-simple": "^7.0.0",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
@@ -24,6 +25,7 @@
     "nodemon": "^2.0.19",
     "nunjucks": "^3.2.3",
     "requests": "^0.3.0",
-    "tsc": "^2.0.4"
+    "tsc": "^2.0.4",
+    "uuid": "^8.3.2"
   }
 }
