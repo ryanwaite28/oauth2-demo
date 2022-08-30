@@ -56,6 +56,11 @@ app.use(express_session);
 
 
 
+
+app.get(`/`, (request, response) => {
+  return response.status(200).json({ message: `Authorization Microservice` });
+});
+
 app.get(`/oauth`, Handlers.get_oauth);
 app.post(`/oauth`, Handlers.post_oauth);
 app.get(`/oauth/grant`, Handlers.get_oauth_grant);
@@ -70,7 +75,7 @@ app.get(`/logout`, Handlers.get_logout);
 
 
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, (l, e) => {
   console.log({ l, e });
   console.log(`listening to port ${PORT}...`);

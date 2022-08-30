@@ -72,6 +72,13 @@ const dataByUserEmail = {
   ],
 };
 
+
+
+
+app.get(`/`, (request, response) => {
+  return response.status(200).json({ message: `App Microservice` });
+});
+
 app.get(`/get-user-posts`, (request, response) => {
 
   const auth = request.get('Authorization');
@@ -109,7 +116,7 @@ app.get(`/get-user-posts`, (request, response) => {
 
 
 
-const PORT = 8082;
+const PORT = process.env.PORT || 8082;
 app.listen(PORT, (l, e) => {
   console.log({ l, e });
   console.log(`listening to port ${PORT}...`);

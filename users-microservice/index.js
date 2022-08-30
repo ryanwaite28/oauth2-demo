@@ -32,6 +32,10 @@ app.use(corsMiddleware);
 
 const isProd = app.get('env') === 'production';
 
+app.get(`/`, (request, response) => {
+  return response.status(200).json({ message: `Users Microservice` });
+});
+
 app.post(`/login`, SecretSecured, (request, response) => {
 
   const { email, password } = request.body || {};
@@ -92,6 +96,8 @@ app.post(`/find-by-email`, AccessTokenSecured, (request, response) => {
     return response.status(404).json({ message: `no user found` });
   }
 
+  console.log({ user });
+
   return response.status(200).json({ message: `found`, user });
 
 });
@@ -99,13 +105,14 @@ app.post(`/find-by-email`, AccessTokenSecured, (request, response) => {
 app.get(`/get-user-info`, AccessTokenSecured, (request, response) => {
 
   const data = response.locals.data;
+  console.log({ data });
   return response.status(200).json({ message: `User info`, data });
 
 });
 
 
 
-const PORT = 8084;
+const PORT = process.env.PORT || 8084;
 app.listen(PORT, (l, e) => {
   console.log({ l, e });
   console.log(`listening to port ${PORT}...`);
