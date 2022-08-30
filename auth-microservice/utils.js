@@ -15,7 +15,7 @@ const uniqueValue = () => {
 function generateJWT(data) {
   // console.log(`generateJWT:`, { data });
   try {
-    const jwt_token = jsonwebtoken.sign(data, (process.env.JWT_SECRET));
+    const jwt_token = jsonwebtoken.sign(data, process.env.JWT_SECRET, { expiresIn: `72h` });
     return jwt_token || null;
   } catch (e) {
     console.log(e);
@@ -25,7 +25,7 @@ function generateJWT(data) {
 
 function decodeJWT(token) {
   try {
-    const data = jsonwebtoken.verify(token, (process.env.JWT_SECRET));
+    const data = jsonwebtoken.verify(token, process.env.JWT_SECRET);
     // console.log(`decodeJWT:`, { data });
     return data;
   } catch (e) {

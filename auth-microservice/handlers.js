@@ -163,7 +163,7 @@ const get_oauth_grant = (request, response) => {
 
   delete authCodes[request.query.code];
 
-  const expire_moment = moment().add(1, 'days');
+  const expire_moment = moment().add(3, 'days');
 
   const expires = expire_moment.toISOString();
   const data = {
