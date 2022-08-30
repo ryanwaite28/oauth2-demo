@@ -1,4 +1,4 @@
-<html lang="en" ng-app="signupApp">
+<html lang="en" ng-app="App">
 
   <head>
     <meta charset="UTF-8">
@@ -29,15 +29,19 @@
           <input ng-model="password" name="password" type="password" class="form-control" id="exampleInputPassword1">
         </div>
         
-        <button type="button" class="p-2 rounded text-white bg-blue-500" ng-click="signup()">Submit</button>
+        <button type="button" class="py-2 px-4 rounded text-white bg-blue-500" ng-click="signup()">Submit</button>
       </form>
+
+      <br/>
 
       <p>Already have an account?</p>
       <p>
-        <a href="/login?client_id={{ client_id }}">Log In</a>
+        <a href="/login?client_id={{ client_id }}">
+          <button type="button" class="py-1 px-3 rounded text-white bg-green-500">Log In</button>
+        </a>
       </p>
 
-      <p ng-bind-html="errorMessage"></p>
+      <p class="mt-7 text-red-500 font-bold" ng-if="!!errorMessage">(( errorMessage ))</p>
     </div>
   </body>
 

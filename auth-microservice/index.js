@@ -64,6 +64,7 @@ app.get(`/login`, Handlers.get_login);
 app.post(`/login`, Handlers.post_login);
 app.get(`/signup`, Handlers.get_signup);
 app.post(`/signup`, Handlers.post_signup);
+app.get(`/logout`, Handlers.get_logout);
 
 
 

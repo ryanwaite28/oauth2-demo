@@ -1,4 +1,4 @@
-<html lang="en" ng-app="oauthApp">
+<html lang="en" ng-app="App">
 
   <head>
     <meta charset="UTF-8">
@@ -11,16 +11,26 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="/static/js/oauth.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
 
   <body ng-controller="oauthCtrl">
     <div class="container mx-auto my-5">
-      Let <strong class="font-bold">{{ third_party_app_name }}</strong> use your data?
+      <h1 class="text-3xl mb-2">
+        Hi <span class="font-bold">{{ user.name.first }} {{ user.name.middle }} {{ user.name.last }}</span>!
+      </h1>
+      <br/>
+      <p class="mb-5 text-xl">
+        Let <span class="font-bold">{{ third_party_app_name }}</span> use your data?
+      </p>
 
-      <form action="/oauth?client_id={{ client_id }}" method="POST">
+      <form class="mb-5" action="/oauth?client_id={{ client_id }}" method="POST">
 
-        <button type="submit" class="btn btn-primary" (click)="authorize()">Authorize</button>
+        <button type="submit" class="py-2 px-4 rounded text-white bg-green-500">Authorize</button>
       </form>
+
+      <br/>
+      <button type="button" class="py-1 px-3 rounded text-white bg-yellow-500" ng-click="logout()">Logout</button>
     </div>
 
   </body>

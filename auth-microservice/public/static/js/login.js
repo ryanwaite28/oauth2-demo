@@ -1,8 +1,13 @@
-const loginApp = angular.module('loginApp', []);
+const App = angular.module('App', []);
+
+App.config(($interpolateProvider) => {
+  $interpolateProvider.startSymbol('((');
+  $interpolateProvider.endSymbol('))');
+});
 
 const HOST = `http://localhost:8080`;
 
-loginApp.controller('loginCtrl', ['$scope', '$http', ($scope, $http) => {
+App.controller('loginCtrl', ['$scope', '$http', ($scope, $http) => {
 
   console.log({ $scope, $http }, this);
   
@@ -45,8 +50,9 @@ loginApp.controller('loginCtrl', ['$scope', '$http', ($scope, $http) => {
       console.log(error);
       error.json().then(data => {
         console.log({ data });
-        $scope.errorMessage = data.message;
-        $scope.$apply();
+        $scope.$apply(() => {
+          $scope.errorMessage = data.message;
+        });
       });
     });
 

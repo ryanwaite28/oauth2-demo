@@ -57,7 +57,7 @@ const get_oauth = (request, response) => {
   // }
   
 
-  return response.render(`static/html/oauth.html`, { third_party_app_name: app.name, client_id: request.query.client_id });
+  return response.render(`static/html/oauth.html`, { third_party_app_name: app.name, client_id: request.query.client_id, user: request.session.user });
   // return response.status(200).json({ message: `admit one` });
 };
 
@@ -163,7 +163,8 @@ const get_oauth_grant = (request, response) => {
 
   delete authCodes[request.query.code];
 
-  const expire_moment = moment().add(5, 'seconds');
+  const expire_moment = moment().add(1, 'days');
+
   const expires = expire_moment.toISOString();
   const data = {
     expires,
@@ -318,6 +319,15 @@ const post_signup = async (request, response) => {
   return response.status(200).json({ user: results, message: `admit one` });
 };
 
+const get_logout = async (request, response) => {
+  request.session.destroy((error) => {
+    console.log({ error });
+    return !!error 
+      ? response.status(500).json({ error, message: `Could not destroy session...` })
+      : response.status(200).json({ message: `logged out successfully` });
+  });
+};
+
 
 
 
@@ -331,4 +341,5 @@ module.exports = {
   post_login,
   get_signup,
   post_signup,
+  get_logout,
 };
