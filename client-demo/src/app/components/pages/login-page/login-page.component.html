@@ -5,6 +5,10 @@
     <button type="button" class="btn btn-primary">Login with DemoApp</button>
   </a>
 
+  <p *ngIf="tokenExpired">
+    Token is expired
+  </p>
+
   <div *ngIf="logged_in">
     Logged In
 

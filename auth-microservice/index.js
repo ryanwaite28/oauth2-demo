@@ -60,7 +60,6 @@ app.get(`/oauth`, Handlers.get_oauth);
 app.post(`/oauth`, Handlers.post_oauth);
 app.get(`/oauth/grant`, Handlers.get_oauth_grant);
 app.get(`/verify-access-token`, Handlers.verify_access_token);
-
 app.get(`/login`, Handlers.get_login);
 app.post(`/login`, Handlers.post_login);
 app.get(`/signup`, Handlers.get_signup);

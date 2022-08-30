@@ -8,7 +8,7 @@ const commonHeaders = {
 
 class UsersMicroservice {
 
-  static HOST = `http://localhost:8084`;
+  static HOST = process.env.USERS_MS_HOST || `http://localhost:8084`;
 
   static async login(email, password) {
     return axios.post(`${this.HOST}/login`, { email, password }, { headers: { ...commonHeaders, 'Users-Microservice-Secret': process.env['USERS_MICROSERVICE_SECRET'] } })

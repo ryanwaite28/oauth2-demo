@@ -13,3 +13,5 @@ to start:
 
 the `auth-microservice` uses cookie sessions (<a href="https://www.npmjs.com/package/express-session">express-session</a>). The sessions should be kept in a database so each instance can read the same data when scaling up.
 the `.env` file has a `DATABASE_URL` key; this should be a `PostgreSQL` connection string.
+
+The `users-microservices` has a static array of user info for login.

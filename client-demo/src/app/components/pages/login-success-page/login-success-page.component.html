@@ -3,6 +3,14 @@
 
   <p *ngIf="errorMessage">{{ errorMessage }}</p>
 
+  <p *ngIf="tokenExpired">
+    Token is expired
+
+    <a [routerLink]="['/', 'login']">
+      <button type="button" class="btn btn-info">Login</button>
+    </a>
+  </p>
+
   <div *ngIf="userData">
     Hi <strong>{{ userData.name.first }} {{ userData.name.middle }} {{ userData.name.last }}</strong>!
 

@@ -99,7 +99,7 @@ app.post(`/find-by-email`, AccessTokenSecured, (request, response) => {
 app.get(`/get-user-info`, AccessTokenSecured, (request, response) => {
 
   const data = response.locals.data;
-  return response.status(200).json({ message: `User indo`, data });
+  return response.status(200).json({ message: `User info`, data });
 
 });
 

@@ -22,6 +22,7 @@ export class LoginSuccessPageComponent implements OnInit {
 
   userData: any = null;
   errorMessage: string = '';
+  tokenExpired: boolean = false;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -68,6 +69,12 @@ export class LoginSuccessPageComponent implements OnInit {
     this.http.get(`${AUTH_HOST}/verify-access-token`, options).subscribe({
       next: (response) => {
         console.log(response);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.error.expired) {
+          this.tokenExpired = true;
+          window.localStorage.removeItem(`demo-app-access-token`);
+        }
       }
     });
 

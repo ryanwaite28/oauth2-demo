@@ -163,7 +163,7 @@ const get_oauth_grant = (request, response) => {
 
   delete authCodes[request.query.code];
 
-  const expire_moment = moment().add(5, 'days');
+  const expire_moment = moment().add(5, 'seconds');
   const expires = expire_moment.toISOString();
   const data = {
     expires,
@@ -211,7 +211,7 @@ const verify_access_token = (request, response) => {
     return response.status(401).json({ message: `token is expired`, expired: true });
   }
 
-  return response.status(200).json({ valid: true, message: `Token is valid!` });
+  return response.status(200).json({ valid: true, message: `Token is valid!`, data });
 
 };
 
